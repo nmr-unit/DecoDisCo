@@ -12,6 +12,10 @@ parfor ic1=1:size(image,2)
         PSF = getPSF(params, fieldMapCol_parfor(ic2), t2starMapCol_parfor(ic2), scan);
         PSFmatrix_parfor(:,ic2) = circshift(PSF,-ceil(size(image,2)/2)+ic2);
     end
+    if isreal(image)
+        PSFmatrix_parfor = abs(PSFmatrix_parfor);
+        PSFmatrix_parfor = PSFmatrix_parfor./repmat(abs(sum(PSFmatrix_parfor)), size(image,1), 1);
+    end
     
     inv_matrix = invreg(PSFmatrix_parfor, params.alpha);
     reconstructed_object(:,ic1) = inv_matrix*image(:,ic1);

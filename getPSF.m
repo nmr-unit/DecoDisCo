@@ -15,7 +15,7 @@ elseif mod(Ny,2) == 1
     ycoord   = -Ny/2+.5:Ny/2-.5;
 end
 
-if strcmp(scan.type, 'epi')
+if strcmp(scan.type, 'ge-epi')
     if strcmp(scan.direction,'up')
         if strcmp(scan.pftype, 'zerofill')
             qplus  = -Ta/2/t2star + 1i*pi*(B0*Ta + ycoord);
@@ -37,10 +37,38 @@ if strcmp(scan.type, 'epi')
     else
         error('Unknown direction of traversal. Possible are ''up'' and ''down''.');
     end
+elseif strcmp(scan.type, 'se-epi')
+    t2star = 1/(1/t2 + 1/t2prime);
+    t2diff = 1/(1/t2 - 1/t2prime);
+    if strcmp(scan.direction,'up')
+        if strcmp(scan.pftype, 'zerofill')
+            qplusdiff  = Ta/2/t2diff - 1i*pi*(B0*Ta + ycoord);
+            qplusstar  = Ta/2/t2star - 1i*pi*(B0*Ta + ycoord);        
+            PSF    = exp(1i*2*pi*B0*Te)*((exp((2*pf-1)*qplusdiff)-1)./(2*yres*qplusdiff) + (1-exp(-qplusstar)))./(2*yres*qplusstar);
+        elseif strcmp(scan.pftype, 'conjfill')
+            qplusdiff  = Ta/2/t2diff - 1i*pi*(B0*Ta + ycoord);
+            qplusstar  = Ta/2/t2star - 1i*pi*(B0*Ta + ycoord);
+            PSF = exp(1i*2*pi*B0*Te)*(((exp((2*pf-1)*qplusdiff)-1)./(2*yres*qplusdiff) + (1-exp(-qplusstar)))./(2*yres*qplusstar) + (exp((2*pf-1)*qplusdiff) - exp(qplusstar))./(2*yres*qplusstar));
+        end
+    elseif strcmp(scan.direction,'down')
+        if strcmp(scan.pftype, 'zerofill')
+            qminusdiff  = Ta/2/t2diff - 1i*pi*(B0*Ta - ycoord);
+            qminusstar  = Ta/2/t2star - 1i*pi*(B0*Ta - ycoord); 
+            PSF    = exp(1i*2*pi*B0*Te)*((exp((2*pf-1)*qminusdiff)-1)./(2*yres*qminusdiff) + (1-exp(-qminusstar)))./(2*yres*qminusstar);
+        elseif strcmp(scan.pftype, 'conjfill')
+            qminusdiff  = Ta/2/t2diff - 1i*pi*(B0*Ta - ycoord);
+            qminusstar  = Ta/2/t2star - 1i*pi*(B0*Ta - ycoord);
+            PSF = exp(1i*2*pi*B0*Te)*(((exp((2*pf-1)*qminusdiff)-1)./(2*yres*qminusdiff) + (1-exp(-qminusstar)))./(2*yres*qminusstar) + (exp((2*pf-1)*qminusdiff) - exp(qminusstar))./(2*yres*qminusstar));
+        else
+            error('Unknown Partial Fourier Type. Possible ''zerofill'' and ''conjfill''.');
+        end
+    else
+        error('Unknown direction of traversal. Possible are ''up'' and ''down''.');
+    end
 elseif strcmp(scan.type, 'depicting')
     qplus  = -Ta/2/t2star + 1i*pi*(B0*Ta + ycoord);
     qminus = -Ta/2/t2star + 1i*pi*(B0*Ta - ycoord);
-    PSF(ic1) = exp(1i*2*pi*Te*B0)*((1-exp(qplus))./qplus + (1-exp(qminus))./qminus)/2/yres;
+    PSF    = exp(1i*2*pi*Te*B0)*((1-exp(qplus))./qplus + (1-exp(qminus))./qminus)/2/yres;
 else
     error('Unknown scan type. Possible are ''epi'' and ''depicting''.');
 end
